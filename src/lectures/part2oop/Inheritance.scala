@@ -3,7 +3,7 @@ package lectures.part2oop
 object Inheritance extends App {
   sealed class Animal {
     val creatureType = "wild"
-    final def eat = println("nomnom")
+    def eat = println("nomnom")
   }
 
   class Cat extends Animal {
