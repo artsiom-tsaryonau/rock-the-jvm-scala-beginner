@@ -77,8 +77,8 @@ object ListTest extends App {
 
   println(listOfIntegers.toString)
   println(listOfStrings.toString)
-  println(listOfIntegers.map(source => source * 2).toString)
-  println(listOfIntegers.filter(source => source % 2 == 0).toString)
+  println(listOfIntegers.map(_ * 2).toString)
+  println(listOfIntegers.filter(_ % 2 == 0).toString)
   println((listOfIntegers ++ anotherListOfIntegers).toString)
   println(listOfIntegers.flatMap(source => new Cons(source, new Cons(source + 1, Empty))).toString)
   println(cloneListOfIntegers == listOfIntegers)
