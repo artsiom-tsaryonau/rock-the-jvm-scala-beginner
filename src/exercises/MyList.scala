@@ -17,13 +17,15 @@ abstract class MyList[+A] {
   def add[B >: A](e: B): MyList[B]
   def printElements: String
   override def toString: String = "[" + printElements + "]"
-
   // higher order functions
   def map[B](transformer: A => B): MyList[B]
   def flatMap[B](transformer: A => MyList[B]): MyList[B]
   def filter(predicate: A => Boolean): MyList[A]
-
   def ++[B >: A](list: MyList[B]): MyList[B]
+  def foreach(f: A => Unit): Unit
+  def sort(compare: (A, A) => Int): MyList[A]
+  def zipWith[B, C](list: MyList[B], zip: (A, B) => C): MyList[C]
+  def fold[B](start: B)(operator: (B, A) => B): B
 
   /*
   1. Generic trait MyPredicate[T]
@@ -46,8 +48,13 @@ case object Empty extends MyList[Nothing] {
   override def map[B](transformer: Nothing => B): MyList[B] = Empty
   override def filter(predicate: Nothing => Boolean): MyList[Nothing] = Empty
   override def flatMap[B](transformer: Nothing => MyList[B]): MyList[B] = Empty
-
   override def ++[B >: Nothing](list: MyList[B]): MyList[B] = list
+  override def foreach(f: Nothing => Unit): Unit = ()
+  override def sort(compare: (Nothing, Nothing) => Int): MyList[Nothing] = Empty
+  override def zipWith[B, C](list: MyList[B], zip: (Nothing, B) => C): MyList[C] =
+    if (!list.isEmpty) throw new RuntimeException("List do not have the same length")
+    else Empty
+  override def fold[B](start: B)(operator: (B, Nothing) => B): B = start
 }
 
 case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
@@ -65,8 +72,25 @@ case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
   }
   override def flatMap[B](transformer: A => MyList[B]): MyList[B] =
     transformer(h) ++ t.flatMap(transformer)
-
   override def ++[B >: A](list: MyList[B]): MyList[B] = Cons(h, t ++ list)
+  override def foreach(f: A => Unit): Unit = {
+    f(h)
+    t.foreach(f)
+  }
+  override def sort(compare: (A, A) => Int): MyList[A] = {
+    def insert(x: A, sortedList: MyList[A]): MyList[A] =
+      if (sortedList.isEmpty) new Cons(x, Empty)
+      else if (compare(x, sortedList.head) <= 0) new Cons(x, sortedList)
+      else new Cons(sortedList.head, insert(x, sortedList.tail))
+    val sortedTail = t.sort(compare)
+    insert(h, sortedTail)
+  }
+  override def zipWith[B, C](list: MyList[B], zip: (A, B) => C): MyList[C] =
+    if (list.isEmpty) throw new RuntimeException("List do not have the same length")
+    else new Cons(zip(h, list.head), t.zipWith(list.tail, zip))
+  override def fold[B](start: B)(operator: (B, A) => B): B = {
+    t.fold(operator(start, h))(operator)
+  }
 }
 
 object ListTest extends App {
@@ -82,4 +106,9 @@ object ListTest extends App {
   println((listOfIntegers ++ anotherListOfIntegers).toString)
   println(listOfIntegers.flatMap(source => new Cons(source, new Cons(source + 1, Empty))).toString)
   println(cloneListOfIntegers == listOfIntegers)
+
+  listOfIntegers.foreach(println)
+  println(listOfIntegers.sort((x, y) => y - x))
+  println(anotherListOfIntegers.zipWith[String, String](listOfStrings, (_ + "-" + _)))
+  println(listOfIntegers.fold(0)(_ + _))
 }
