@@ -1,23 +1,12 @@
 package exercises
 
 abstract class MyList[+A] {
-
-  /*
-    contains Int
-    head - first element of the list
-    tail - remainder of the list
-    isEmpty - is this list empty
-    add(int) => new list with this element added
-    toString => a string representation of the list
-   */
-
   def head: A
   def tail: MyList[A]
   def isEmpty: Boolean
   def add[B >: A](e: B): MyList[B]
   def printElements: String
   override def toString: String = "[" + printElements + "]"
-  // higher order functions
   def map[B](transformer: A => B): MyList[B]
   def flatMap[B](transformer: A => MyList[B]): MyList[B]
   def filter(predicate: A => Boolean): MyList[A]
@@ -26,17 +15,6 @@ abstract class MyList[+A] {
   def sort(compare: (A, A) => Int): MyList[A]
   def zipWith[B, C](list: MyList[B], zip: (A, B) => C): MyList[C]
   def fold[B](start: B)(operator: (B, A) => B): B
-
-  /*
-  1. Generic trait MyPredicate[T]
-    - test(T)
-  2. Generic trait MyTransformer[A, B]
-    - convert A to B
-  3. MyList:
-      - map(transformer) => MyList
-      - filter(predicate) => MyList
-      - flatMap(transformer from A to MyList[B]) => MyList[B]
- */
 }
 
 case object Empty extends MyList[Nothing] {
@@ -111,4 +89,11 @@ object ListTest extends App {
   println(listOfIntegers.sort((x, y) => y - x))
   println(anotherListOfIntegers.zipWith[String, String](listOfStrings, (_ + "-" + _)))
   println(listOfIntegers.fold(0)(_ + _))
+
+  // for comprehension
+  val combinations = for {
+    n <- listOfIntegers
+    string <- listOfStrings
+  } yield n + "-" + string
+  println(combinations)
 }
